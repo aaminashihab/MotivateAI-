@@ -117,7 +117,7 @@ Final output MUST strictly be in this JSON format without markdown blocks:
         try {
           const result = await mcpClient.callTool({
             name: mcpTool.name,
-            arguments: call.args,
+            arguments: call.args as Record<string, unknown>,
           });
           toolResultText = JSON.stringify(result);
         } catch (e: any) {
