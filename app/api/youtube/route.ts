@@ -21,11 +21,27 @@ export async function GET(req: Request) {
       });
     }
 
+    const durationParam = searchParams.get('duration');
+    let durationFilter = '';
+    
+    if (durationParam) {
+      const minutes = parseInt(durationParam, 10);
+      if (!isNaN(minutes)) {
+        if (minutes < 4) {
+          durationFilter = '&videoDuration=short';
+        } else if (minutes <= 20) {
+          durationFilter = '&videoDuration=medium';
+        } else {
+          durationFilter = '&videoDuration=long';
+        }
+      }
+    }
+
     // Call real YouTube API
     const response = await fetch(
       `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=1&q=${encodeURIComponent(
         query + ' tutorial'
-      )}&type=video&key=${apiKey}`
+      )}&type=video${durationFilter}&key=${apiKey}`
     );
 
     const data = await response.json();

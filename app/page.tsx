@@ -107,8 +107,11 @@ export default function Home() {
         alert("Failed to parse tasks. Please try again.");
       }
 
+      // Calculate total duration for video filter
+      const totalDuration = data.tasks ? data.tasks.reduce((sum: number, t: any) => sum + (t.durationMinutes || t.duration || 15), 0) : 15;
+      
       // 2. Fetch Relevant YouTube Video
-      const ytRes = await fetch(`/api/youtube?q=${encodeURIComponent(goal)}`);
+      const ytRes = await fetch(`/api/youtube?q=${encodeURIComponent(goal)}&duration=${totalDuration}`);
       const ytData = await ytRes.json();
       if (ytData.videoId) {
         setVideoData(ytData);
@@ -136,9 +139,12 @@ export default function Home() {
     if (plan.sessionId) setSessionId(plan.sessionId);
     if (typeof window !== 'undefined') localStorage.removeItem('motivateai_timer_state');
     
+    // Calculate total duration for video filter
+    const totalDuration = plan.tasks.reduce((sum: number, t: any) => sum + (t.durationMinutes || t.duration || 15), 0);
+    
     // Fetch video
     try {
-      const ytRes = await fetch(`/api/youtube?q=${encodeURIComponent(plan.goal)}`);
+      const ytRes = await fetch(`/api/youtube?q=${encodeURIComponent(plan.goal)}&duration=${totalDuration}`);
       const ytData = await ytRes.json();
       if (ytData.videoId) {
         setVideoData(ytData);
