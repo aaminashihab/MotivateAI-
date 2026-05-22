@@ -17,6 +17,7 @@ export async function POST(request: NextRequest) {
 
     let userSessions: SessionLog[] = [];
     let sessionCollection: any = null;
+    let userPreferences: any = null;
     
     try {
       const client = await clientPromise;
@@ -28,6 +29,11 @@ export async function POST(request: NextRequest) {
         .sort({ createdAt: -1 })
         .limit(10)
         .toArray();
+        
+      const userDoc = await db.collection('users').findOne({ _id: userId });
+      if (userDoc && userDoc.preferences) {
+        userPreferences = userDoc.preferences;
+      }
     } catch (dbError) {
       console.warn('[AdaptiveGen] MongoDB connection failed, falling back to clean profile:', dbError);
       // Proceed with empty sessions if DB is unreachable
@@ -36,7 +42,8 @@ export async function POST(request: NextRequest) {
     const sessionPlan = await generateAdaptiveSession(
       goal,
       userId,
-      userSessions as any
+      userSessions as any,
+      userPreferences
     );
 
     const generatedSessionId = `session_${Date.now()}`;

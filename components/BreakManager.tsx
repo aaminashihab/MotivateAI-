@@ -17,6 +17,7 @@ export default function BreakManager({
   const [isActive, setIsActive] = useState(false);
   const [isBreakMode, setIsBreakMode] = useState(false);
   const [activityIndex, setActivityIndex] = useState(0);
+  const [breakDuration, setBreakDuration] = useState(5); // Default 5 minutes
 
   const ACTIVITIES = [
     "💧 Time to hydrate! Grab a glass of water.",
@@ -45,6 +46,21 @@ export default function BreakManager({
     setIsBreakMode(false);
     setIsActive(false);
     setActivityIndex(Math.floor(Math.random() * ACTIVITIES.length));
+
+    // Fetch user preferences for break duration
+    if (typeof window !== 'undefined') {
+      const currentUserId = localStorage.getItem('motivateai_user_id');
+      if (currentUserId) {
+        fetch(`/api/users/${currentUserId}/preferences`)
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.minBreakDuration) {
+              setBreakDuration(data.minBreakDuration);
+            }
+          })
+          .catch(err => console.error("Failed to load preferences in BreakManager", err));
+      }
+    }
   }, [initialMinutes, taskIndex]);
 
   useEffect(() => {
@@ -76,7 +92,7 @@ export default function BreakManager({
   const handleMarkDone = () => {
     if (!isBreakMode) {
       setIsBreakMode(true);
-      setTimeLeft(5 * 60); // 5 min break
+      setTimeLeft(breakDuration * 60); // Use preference break duration
       setIsActive(true); // Auto-start break timer
     }
   };
@@ -94,7 +110,7 @@ export default function BreakManager({
   if (isBreakMode) {
     return (
       <div className="glass-panel text-center border-success/50">
-        <h2 className="text-2xl md:text-3xl font-bold mb-2">Break Time (5 Min)</h2>
+        <h2 className="text-2xl md:text-3xl font-bold mb-2">Break Time ({breakDuration} Min)</h2>
         <p className="text-success mb-6 px-4">{ACTIVITIES[activityIndex]}</p>
         <div className="text-6xl md:text-7xl lg:text-8xl font-extrabold my-8 tabular-nums bg-clip-text text-transparent bg-gradient-to-br from-emerald-400 to-white">
           {formatTime(timeLeft)}

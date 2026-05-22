@@ -28,7 +28,8 @@ export interface AdaptiveSessionPlan {
 export async function generateAdaptiveSession(
   goal: string,
   userId: string,
-  userSessions: SessionLog[]
+  userSessions: SessionLog[],
+  userPreferences?: any
 ): Promise<AdaptiveSessionPlan> {
   // Step 1: Analyze user behavior
   const userProfile = analyzeUserBehavior(userSessions);
@@ -37,15 +38,18 @@ export async function generateAdaptiveSession(
   const adaptationPrompt = buildAdaptationPrompt(userProfile);
 
   // Step 3: Call Gemini with enriched prompt
+  const targetDuration = userPreferences?.maxSessionDuration || 60;
+  const targetDifficulty = userPreferences?.difficultyLevel || 'intermediate';
+  
   const fullPrompt = `${adaptationPrompt}
 
 User's goal: "${goal}"
 
-Please create a personalized 1-hour learning session that breaks down this goal into micro-tasks.
+Please create a personalized ${targetDuration}-minute learning session that breaks down this goal into micro-tasks. The user's preferred difficulty level is ${targetDifficulty}.
 
 IMPORTANT RULES:
 1. Return ONLY valid JSON, no markdown, no extra text
-2. Each task should be 10-30 minutes
+2. Each task should be 10-30 minutes, keeping the total time around ${targetDuration} minutes.
 3. Include a "resources" field with the key topic to search for on YouTube
 4. Consider the user's preferences in task duration and difficulty
 5. Prioritize completion likelihood over perfectionism
