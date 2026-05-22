@@ -14,6 +14,9 @@ export default function VideoEmbed({ videoId, title }: { videoId: string, title:
           allowFullScreen
         ></iframe>
       </div>
+      <div className="mt-4 bg-blue-900/20 border border-blue-500/20 text-blue-300 text-xs px-3 py-2 rounded-lg flex items-center gap-2">
+        💡 Coach Note: You do not need to finish this entire video. Use it as a reference, scrub to the relevant parts, and focus on your active task!
+      </div>
     </div>
   );
 }

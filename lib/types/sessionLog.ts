@@ -56,7 +56,9 @@ export interface SessionLog {
   // Metrics
   completionRatio: number; // (completed tasks / total tasks) * 100
   tasksCompleted: number;
+  tasksSkipped?: number; // How many tasks user explicitly skipped
   taskCount: number;
+  abandoned?: boolean; // True if the user hit "End Session Early"
   
   // Dropout tracking
   dropoutPoint?: {

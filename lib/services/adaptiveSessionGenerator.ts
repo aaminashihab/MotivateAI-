@@ -41,10 +41,21 @@ export async function generateAdaptiveSession(
   const targetDuration = userPreferences?.maxSessionDuration || 60;
   const targetDifficulty = userPreferences?.difficultyLevel || 'intermediate';
   const minBreak = userPreferences?.minBreakDuration || 5;
+
+  // Check for recent duplicate goals within 24 hours
+  const oneDayAgo = new Date();
+  oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+  const recentDuplicate = userSessions.find(
+    (s) => s.goal?.toLowerCase() === goal.toLowerCase() && new Date(s.createdAt) > oneDayAgo
+  );
+
+  const duplicateContext = recentDuplicate 
+    ? "\nCRITICAL: The user has already studied this topic recently. DO NOT include any 'Introduction', 'Setup', or 'Overview' tasks. Jump immediately into intermediate practice, advanced concepts, or building a project."
+    : "";
   
   const fullPrompt = `${adaptationPrompt}
 
-User's goal: "${goal}"
+User's goal: "${goal}"${duplicateContext}
 
 Please create a personalized ${targetDuration}-minute learning session that breaks down this goal into micro-tasks. The user's preferred difficulty level is ${targetDifficulty}.
 

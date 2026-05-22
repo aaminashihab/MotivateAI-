@@ -5,7 +5,7 @@ import { SessionLog } from '@/lib/types/sessionLog';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, sessionId, tasksCompleted, taskCount, sessionRating } = body;
+    const { userId, sessionId, tasksCompleted, tasksSkipped, taskCount, sessionRating, abandoned } = body;
 
     if (!userId || !sessionId) {
       return NextResponse.json(
@@ -43,6 +43,14 @@ export async function POST(request: NextRequest) {
 
         if (sessionRating !== undefined) {
           updateData.sessionRating = sessionRating;
+        }
+        
+        if (tasksSkipped !== undefined) {
+          updateData.tasksSkipped = tasksSkipped;
+        }
+
+        if (abandoned !== undefined) {
+          updateData.abandoned = abandoned;
         }
 
         await db.collection<SessionLog>('sessions').updateOne(

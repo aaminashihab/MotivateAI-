@@ -6,13 +6,17 @@ export default function BreakManager({
   taskIndex,
   taskName,
   totalTasks,
-  onComplete 
+  onComplete,
+  onSkipTask,
+  onEndEarly
 }: { 
   initialMinutes: number, 
   taskIndex: number,
   taskName?: string,
   totalTasks?: number,
-  onComplete: () => void 
+  onComplete: () => void,
+  onSkipTask?: () => void,
+  onEndEarly?: () => void
 }) {
   const [timeLeft, setTimeLeft] = useState(initialMinutes * 60);
   const [isActive, setIsActive] = useState(false);
@@ -178,7 +182,30 @@ export default function BreakManager({
         >
           Mark Done
         </button>
+        {onSkipTask && (
+          <button 
+            onClick={onSkipTask} 
+            className="min-h-[48px] px-8 py-3 rounded-xl font-semibold bg-white/5 border border-slate-600 text-slate-400 hover:bg-white/10 hover:text-white transition-all w-full md:w-auto"
+          >
+            Skip Task
+          </button>
+        )}
       </div>
+
+      {onEndEarly && (
+        <div className="mt-8">
+          <button 
+            onClick={() => {
+              if (window.confirm("Are you sure you want to end this session early? Your partial progress will be saved.")) {
+                onEndEarly();
+              }
+            }}
+            className="text-slate-500 hover:text-red-400 underline text-sm transition-colors"
+          >
+            End Session Early
+          </button>
+        </div>
+      )}
     </div>
   );
 }

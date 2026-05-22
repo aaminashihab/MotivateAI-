@@ -32,6 +32,7 @@ export default function Home() {
   const [streak, setStreak] = useState(0);
   const [userId, setUserId] = useState<string>('');
   const [sessionId, setSessionId] = useState<string>('');
+  const [skippedCount, setSkippedCount] = useState(0);
 
   // Load session and streak on mount
   useEffect(() => {
@@ -55,6 +56,7 @@ export default function Home() {
             setActiveIndex(data.activeIndex || 0);
             setVideoData(data.videoData || null);
             if (data.sessionId) setSessionId(data.sessionId);
+            if (data.skippedCount) setSkippedCount(data.skippedCount);
           }
         } catch (e) {}
       }
@@ -81,7 +83,7 @@ export default function Home() {
     if (typeof window !== 'undefined') {
       if (tasks.length > 0) {
         localStorage.setItem('motivateai_session', JSON.stringify({
-          goal, tasks, activeIndex, videoData, sessionId
+          goal, tasks, activeIndex, videoData, sessionId, skippedCount
         }));
       } else {
         localStorage.removeItem('motivateai_session');
@@ -143,6 +145,7 @@ export default function Home() {
     setGoal(plan.goal);
     setActiveIndex(0);
     if (plan.sessionId) setSessionId(plan.sessionId);
+    setSkippedCount(0);
     if (typeof window !== 'undefined') localStorage.removeItem('motivateai_timer_state');
     
     // Calculate total duration for video filter
@@ -205,6 +208,87 @@ export default function Home() {
     }
   };
 
+  const handleSkipTask = async () => {
+    const newActiveIndex = activeIndex + 1;
+    const newSkippedCount = skippedCount + 1;
+    setSkippedCount(newSkippedCount);
+    
+    // Send update to database
+    if (userId && sessionId) {
+      try {
+        await fetch('/api/session/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId,
+            sessionId,
+            tasksCompleted: activeIndex, // don't increment completed
+            tasksSkipped: newSkippedCount,
+            taskCount: tasks.length
+          })
+        });
+      } catch (err) {
+        console.error('Failed to update session:', err);
+      }
+    }
+
+    if (activeIndex < tasks.length - 1) {
+      setActiveIndex(newActiveIndex);
+    } else {
+      // Session Complete even if last task skipped!
+      if (typeof window !== 'undefined') {
+        const today = new Date();
+        const lastCompletedStr = localStorage.getItem('motivateai_last_completed');
+        let newStreak = streak;
+
+        if (!lastCompletedStr || !isToday(today, new Date(lastCompletedStr))) {
+          newStreak += 1;
+          setStreak(newStreak);
+          localStorage.setItem('motivateai_streak', newStreak.toString());
+          localStorage.setItem('motivateai_last_completed', today.toISOString());
+        }
+        localStorage.removeItem('motivateai_session');
+        localStorage.removeItem('motivateai_timer_state');
+      }
+
+      setShowModal(true);
+      setActiveIndex(tasks.length);
+    }
+  };
+
+  const handleEndEarly = async () => {
+    // Send update to database with abandoned flag
+    if (userId && sessionId) {
+      try {
+        await fetch('/api/session/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId,
+            sessionId,
+            tasksCompleted: activeIndex,
+            tasksSkipped: skippedCount,
+            taskCount: tasks.length,
+            abandoned: true
+          })
+        });
+      } catch (err) {
+        console.error('Failed to update session:', err);
+      }
+    }
+
+    // Reset session entirely, do NOT increment streak
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('motivateai_session');
+      localStorage.removeItem('motivateai_timer_state');
+    }
+    setTasks([]);
+    setGoal('');
+    setActiveIndex(0);
+    setVideoData(null);
+    setSkippedCount(0);
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-[1536px]">
       <div className="flex flex-col md:flex-row justify-between items-center md:items-start flex-wrap gap-4 mb-8">
@@ -252,6 +336,8 @@ export default function Home() {
                 taskName={tasks[activeIndex].title}
                 totalTasks={tasks.length}
                 onComplete={handleTaskComplete}
+                onSkipTask={handleSkipTask}
+                onEndEarly={handleEndEarly}
               />
             ) : (
               <div className="glass-panel text-center">
