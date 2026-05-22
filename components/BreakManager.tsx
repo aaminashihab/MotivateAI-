@@ -5,6 +5,7 @@ export default function BreakManager({
   initialMinutes, 
   taskIndex,
   taskName,
+  totalTasks,
   onComplete 
 }: { 
   initialMinutes: number, 
