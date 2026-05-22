@@ -10,6 +10,7 @@ export default function BreakManager({
   initialMinutes: number, 
   taskIndex: number,
   taskName?: string,
+  totalTasks?: number,
   onComplete: () => void 
 }) {
   const [timeLeft, setTimeLeft] = useState(initialMinutes * 60);
@@ -123,8 +124,15 @@ export default function BreakManager({
           📚 {taskName}
         </h2>
       )}
-      <p className="text-purple-300 text-sm font-medium mb-2 uppercase tracking-wider">Current Task Timer</p>
-      <div className="text-6xl md:text-7xl lg:text-8xl font-extrabold my-8 tabular-nums bg-clip-text text-transparent bg-gradient-to-br from-white to-slate-400">
+      <p className="text-purple-300 text-sm font-medium mb-1 uppercase tracking-wider">Current Task Timer</p>
+      
+      {totalTasks && (
+        <p className="text-slate-400 text-sm font-semibold">
+          Progress: Task {taskIndex + 1} of {totalTasks} ({initialMinutes} min)
+        </p>
+      )}
+
+      <div className="text-6xl md:text-7xl lg:text-8xl font-extrabold my-6 tabular-nums bg-clip-text text-transparent bg-gradient-to-br from-white to-slate-400">
         {formatTime(timeLeft)}
       </div>
       <div className="flex flex-col md:flex-row justify-center gap-4">

@@ -37,6 +37,8 @@ export default function Home() {
       if (!currentUserId) {
         currentUserId = `user_${Math.random().toString(36).substring(2, 15)}`;
         localStorage.setItem('motivateai_user_id', currentUserId);
+        window.location.href = '/onboarding';
+        return;
       }
       setUserId(currentUserId);
 
@@ -243,6 +245,7 @@ export default function Home() {
                 initialMinutes={tasks[activeIndex].duration} 
                 taskIndex={activeIndex}
                 taskName={tasks[activeIndex].title}
+                totalTasks={tasks.length}
                 onComplete={handleTaskComplete}
               />
             ) : (

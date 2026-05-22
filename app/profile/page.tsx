@@ -82,6 +82,16 @@ export default function ProfilePage() {
       impact: 19,
       timestamp: new Date('2026-05-14'),
       aiReasoning: 'Your skip rate increases when you encounter hard tasks early in the week. By scheduling difficulty progression (Easy early week → Medium mid-week → Hard Friday), you build momentum and confidence.'
+    },
+    {
+      id: '5',
+      type: 'focus_strategy',
+      before: 'Long reading assignments',
+      after: 'Video tutorials + Interactive practice',
+      reason: 'Switched to video content based on your visual learning preference',
+      impact: 42,
+      timestamp: new Date('2026-05-12'),
+      aiReasoning: 'We noticed your completion time was 2x longer than estimated for text-heavy tasks. Switching the resource type to video tutorials aligned with your Visual Learning Style decreased your completion time and increased engagement.'
     }
   ]);
 
