@@ -1,15 +1,16 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 
 export async function GET(
-  request: Request,
-  { params }: { params: { userId: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
+    const { userId } = await params;
     const client = await clientPromise;
     const db = client.db('motivateai');
     
-    const user = await db.collection('users').findOne({ _id: params.userId });
+    const user = await db.collection<any>('users').findOne({ _id: userId });
     
     if (!user || !user.preferences) {
       return NextResponse.json({}, { status: 404 });
@@ -23,19 +24,20 @@ export async function GET(
 }
 
 export async function PUT(
-  request: Request,
-  { params }: { params: { userId: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
+    const { userId } = await params;
     const preferences = await request.json();
     const client = await clientPromise;
     const db = client.db('motivateai');
 
-    await db.collection('users').updateOne(
-      { _id: params.userId },
+    await db.collection<any>('users').updateOne(
+      { _id: userId },
       { 
         $set: { 
-          _id: params.userId,
+          _id: userId,
           preferences, 
           updatedAt: new Date() 
         } 
