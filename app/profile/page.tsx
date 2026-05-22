@@ -190,6 +190,20 @@ export default function ProfilePage() {
                     <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none' }} />
                   </PieChart>
                 </ResponsiveContainer>
+                <div className="flex justify-center gap-6 mt-6">
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-[#10b981] shadow-[0_0_8px_#10b981]"></span>
+                    <span className="text-sm font-medium text-slate-300">Easy</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-[#8b5cf6] shadow-[0_0_8px_#8b5cf6]"></span>
+                    <span className="text-sm font-medium text-slate-300">Medium</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-[#f59e0b] shadow-[0_0_8px_#f59e0b]"></span>
+                    <span className="text-sm font-medium text-slate-300">Hard</span>
+                  </div>
+                </div>
               </div>
             </div>
 

@@ -259,7 +259,7 @@ export default function Home() {
                 <p className="text-slate-300 mb-6">Great job staying consistent today.</p>
                 <button 
                   onClick={() => setTasks([])}
-                  className="w-full md:w-auto min-h-[48px] bg-accent hover:bg-accent-hover text-white font-semibold py-3 px-6 rounded-xl transition-all"
+                  className="w-full md:w-auto min-h-[48px] bg-gradient-to-r from-emerald-400 to-cyan-500 hover:from-emerald-300 hover:to-cyan-400 hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] text-slate-900 font-bold tracking-wide py-3 px-8 rounded-xl transition-all duration-300 transform hover:-translate-y-1"
                 >
                   Start New Session
                 </button>

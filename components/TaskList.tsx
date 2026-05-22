@@ -31,7 +31,7 @@ export default function TaskList({ tasks, activeIndex }: { tasks: Task[], active
         {tasks.map((task, index) => (
           <li 
             key={index} 
-            className={`task-item group p-4 md:p-6 bg-white/5 border border-white/10 rounded-xl mb-4 flex flex-col sm:flex-row justify-between sm:align-center transition-all relative overflow-hidden ${index === activeIndex ? 'bg-accent/10 border-accent/30' : ''} ${index < activeIndex ? 'opacity-60' : ''}`}
+            className={`task-item group p-4 md:p-6 bg-white/5 border border-white/10 rounded-xl mb-4 flex flex-col sm:flex-row justify-between sm:align-center transition-all relative overflow-hidden ${index === activeIndex ? 'bg-slate-700/80 border-purple-500/50 shadow-[0_0_15px_rgba(139,92,246,0.2)] scale-[1.02] z-10' : 'hover:bg-white/10'} ${index < activeIndex ? 'opacity-60' : ''}`}
           >
             <div className={`absolute left-0 top-0 h-full w-1 bg-accent transform scale-y-0 origin-top transition-transform ${index === activeIndex ? 'scale-y-100' : 'group-hover:scale-y-100'}`}></div>
             <div className="task-info flex-1 pr-4 mb-2 sm:mb-0">

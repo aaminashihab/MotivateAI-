@@ -107,44 +107,47 @@ export default function Settings() {
           <div className="glass-panel">
             <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">🔔 Notifications</h2>
             
-            <div className="space-y-4">
-              <label className="flex items-center gap-3 cursor-pointer group">
+            <div className="space-y-6">
+              <label className="relative flex items-center cursor-pointer group">
                 <input
                   type="checkbox"
+                  className="sr-only peer"
                   checked={preferences.pushNotifications}
                   onChange={(e) => setPreferences({
                     ...preferences,
                     pushNotifications: e.target.checked
                   })}
-                  className="w-5 h-5 accent-purple-500 cursor-pointer"
                 />
-                <span className="text-white group-hover:text-purple-300 transition">Push Notifications</span>
+                <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-500 shadow-inner"></div>
+                <span className="ml-4 text-white group-hover:text-purple-300 transition font-medium">Push Notifications</span>
               </label>
 
-              <label className="flex items-center gap-3 cursor-pointer group">
+              <label className="relative flex items-center cursor-pointer group">
                 <input
                   type="checkbox"
+                  className="sr-only peer"
                   checked={preferences.sessionReminders}
                   onChange={(e) => setPreferences({
                     ...preferences,
                     sessionReminders: e.target.checked
                   })}
-                  className="w-5 h-5 accent-purple-500 cursor-pointer"
                 />
-                <span className="text-white group-hover:text-purple-300 transition">Session Reminders</span>
+                <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-500 shadow-inner"></div>
+                <span className="ml-4 text-white group-hover:text-purple-300 transition font-medium">Session Reminders</span>
               </label>
 
-              <label className="flex items-center gap-3 cursor-pointer group">
+              <label className="relative flex items-center cursor-pointer group">
                 <input
                   type="checkbox"
+                  className="sr-only peer"
                   checked={preferences.dailySummary}
                   onChange={(e) => setPreferences({
                     ...preferences,
                     dailySummary: e.target.checked
                   })}
-                  className="w-5 h-5 accent-purple-500 cursor-pointer"
                 />
-                <span className="text-white group-hover:text-purple-300 transition">Daily Summary Email</span>
+                <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-500 shadow-inner"></div>
+                <span className="ml-4 text-white group-hover:text-purple-300 transition font-medium">Daily Summary Email</span>
               </label>
             </div>
           </div>

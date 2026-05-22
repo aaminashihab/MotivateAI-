@@ -59,17 +59,19 @@ export default function AdaptiveGoalInput({
       <form onSubmit={handleGenerateSession}>
         <div className="flex flex-col md:flex-row gap-4 mb-4">
           <input
-            className="flex-1 bg-black/20 border border-white/10 rounded-xl px-6 py-4 text-white text-lg focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all min-h-[48px]"
+            className="flex-1 bg-black/30 border border-white/10 rounded-xl px-6 py-4 text-white text-lg focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/40 shadow-inner transition-all min-h-[48px]"
             type="text"
             placeholder="e.g., I want to learn Python basics"
             value={goal}
             onChange={(e) => setGoal(e.target.value)}
             disabled={loading || isLoading}
+            spellCheck={false}
+            autoComplete="off"
           />
           <button 
             type="submit" 
             disabled={loading || isLoading || !goal}
-            className="min-h-[48px] px-8 py-4 bg-accent hover:bg-accent-hover disabled:opacity-50 disabled:hover:bg-accent text-white font-bold rounded-xl transition-all"
+            className="min-h-[48px] px-8 py-4 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 disabled:opacity-50 disabled:from-slate-600 disabled:to-slate-700 hover:shadow-[0_0_20px_rgba(139,92,246,0.6)] text-white font-bold rounded-xl transition-all duration-300"
           >
             {(loading || isLoading) ? <span className="loader"></span> : 'Start'}
           </button>

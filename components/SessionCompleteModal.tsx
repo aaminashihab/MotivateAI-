@@ -41,7 +41,7 @@ export default function SessionCompleteModal({ userId, sessionId, totalTasks, on
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-xl animate-fade-in">
       <div className="glass-panel w-full max-w-md animate-slide-down shadow-[0_0_50px_rgba(139,92,246,0.2)]">
         
         {/* Header Animation */}
