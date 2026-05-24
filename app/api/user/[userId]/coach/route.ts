@@ -13,8 +13,8 @@ export async function GET(
   try {
     const { userId } = await params;
 
-    if (!userId) {
-      return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+    if (!userId || typeof userId !== 'string') {
+      return NextResponse.json({ error: 'User ID must be a string' }, { status: 400 });
     }
 
     let sessions: SessionLog[] = [];
@@ -62,8 +62,11 @@ User Context:
         if (sessions.length > 0) {
           const lastSession = sessions[0];
           const daysSinceLast = Math.floor((Date.now() - new Date(lastSession.createdAt || Date.now()).getTime()) / (1000 * 60 * 60 * 24));
+          const sanitizedGoal = typeof lastSession.goal === 'string' 
+            ? lastSession.goal.slice(0, 60).replace(/ignore|prompt|instruction|system|developer/gi, '') 
+            : 'learning goal';
           prompt += `- Days since last session: ${daysSinceLast}\n`;
-          prompt += `- Last goal: "${lastSession.goal}"\n`;
+          prompt += `- Last goal: "${sanitizedGoal}"\n`;
 
           if (daysSinceLast > 2) {
              prompt += `\nThe user hasn't logged in for a few days. Welcome them back warmly without guilt-tripping them. Ask what got in the way or encourage them to start small today.`;

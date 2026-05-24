@@ -15,6 +15,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (typeof goal !== 'string' || typeof userId !== 'string') {
+      return NextResponse.json(
+        { error: 'Invalid parameters: goal and userId must be strings' },
+        { status: 400 }
+      );
+    }
+
     let userSessions: SessionLog[] = [];
     let sessionCollection: any = null;
     let userPreferences: any = null;
@@ -30,7 +37,7 @@ export async function POST(request: NextRequest) {
         .limit(10)
         .toArray();
         
-      const userDoc = await db.collection('users').findOne({ _id: userId });
+      const userDoc = await db.collection<any>('users').findOne({ _id: userId });
       if (userDoc && userDoc.preferences) {
         userPreferences = userDoc.preferences;
       }

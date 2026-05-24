@@ -42,6 +42,28 @@ function mcpToolToGeminiTool(mcpTool: any): FunctionDeclaration {
   };
 }
 
+function sanitizeGoalInput(input: string): string {
+  if (typeof input !== 'string') return '';
+  let sanitized = input.slice(0, 100);
+
+  const injectionPatterns = [
+    /ignore\s+(all\s+)?(previous\s+)?instructions/gi,
+    /system\s+prompt/gi,
+    /forget\s+(everything|all)/gi,
+    /you\s+must\s+now/gi,
+    /developer\s+mode/gi,
+    /act\s+as\s+a/gi,
+    /jailbreak/gi,
+    /bypass\s+rules/gi
+  ];
+
+  for (const pattern of injectionPatterns) {
+    sanitized = sanitized.replace(pattern, '');
+  }
+
+  return sanitized.trim();
+}
+
 export async function POST(req: Request) {
   try {
     const { goal } = await req.json();
@@ -50,9 +72,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Goal is required' }, { status: 400 });
     }
 
+    if (typeof goal !== 'string') {
+      return NextResponse.json({ error: 'Goal must be a string' }, { status: 400 });
+    }
+
+    const sanitizedGoal = sanitizeGoalInput(goal);
+
     if (!process.env.GEMINI_API_KEY) {
       console.warn("No GEMINI_API_KEY provided. Using mock data.");
-      return getFallbackData(goal);
+      return getFallbackData(sanitizedGoal);
     }
 
     let mcpClients: Record<string, any> = {};
@@ -86,13 +114,7 @@ export async function POST(req: Request) {
       console.error("MCP Server connection failed. Continuing without tools.", mcpErr);
     }
 
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-2.0-flash",
-      tools: geminiTools.length > 0 ? geminiTools : undefined
-    });
-
     const systemInstruction = `You are MotivateAI, an autonomous agent helping someone build consistency.
-The user wants to achieve this goal: "${goal}".
 You have access to GitHub via MCP. If the goal is coding-related, USE YOUR TOOLS to search GitHub repositories or read files to find REAL project ideas, tutorials, or code to base your plan on!
 
 You ALSO have access to MongoDB via MCP. You can query the 'motivateai' database to fetch user session histories, past goals, or performance data to deeply personalize the session plan based on their past behavior.
@@ -100,20 +122,49 @@ You ALSO have access to MongoDB via MCP. You can query the 'motivateai' database
 Break the goal down into an immediate, actionable, step-by-step 1-hour session based on real data if possible.
 Provide realistic time estimates (in minutes) for each micro-task. Keep tasks short (10-30 mins max) to prevent burnout.
 
-Final output MUST strictly be in this JSON format without markdown blocks:
+You MUST return a JSON structure adhering to this schema:
 {
   "tasks": [
     {
       "title": "Short Task Name",
-      "duration": 15,
+      "duration": number,
       "details": "One sentence describing exactly what to do."
     }
   ]
 }`;
 
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-2.0-flash",
+      tools: geminiTools.length > 0 ? geminiTools : undefined,
+      systemInstruction,
+      generationConfig: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: SchemaType.OBJECT,
+          properties: {
+            tasks: {
+              type: SchemaType.ARRAY,
+              items: {
+                type: SchemaType.OBJECT,
+                properties: {
+                  title: { type: SchemaType.STRING },
+                  duration: { type: SchemaType.NUMBER },
+                  details: { type: SchemaType.STRING }
+                },
+                required: ['title', 'duration', 'details']
+              }
+            }
+          },
+          required: ['tasks']
+        }
+      }
+    });
+
+    const userPrompt = `The user wants to achieve this goal: "${sanitizedGoal}". Please break this goal down into a step-by-step 1-hour session.`;
+
     // Agent Loop
     const chat = model.startChat();
-    let response = await chat.sendMessage(systemInstruction);
+    let response = await chat.sendMessage(userPrompt);
     let responseText = response.response.text();
     let functionCalls = response.response.functionCalls();
 

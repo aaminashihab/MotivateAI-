@@ -9,7 +9,28 @@ export async function POST(request: NextRequest) {
 
     if (!userId || !sessionId) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Missing required fields: userId, sessionId' },
+        { status: 400 }
+      );
+    }
+
+    // Type validation to prevent NoSQL query hijacking (e.g. passing { $ne: null } objects)
+    if (typeof userId !== 'string' || typeof sessionId !== 'string') {
+      return NextResponse.json(
+        { error: 'Invalid parameters: userId and sessionId must be strings' },
+        { status: 400 }
+      );
+    }
+
+    if (
+      (tasksCompleted !== undefined && typeof tasksCompleted !== 'number') ||
+      (tasksSkipped !== undefined && typeof tasksSkipped !== 'number') ||
+      (taskCount !== undefined && typeof taskCount !== 'number') ||
+      (sessionRating !== undefined && typeof sessionRating !== 'number') ||
+      (abandoned !== undefined && typeof abandoned !== 'boolean')
+    ) {
+      return NextResponse.json(
+        { error: 'Invalid parameter types' },
         { status: 400 }
       );
     }

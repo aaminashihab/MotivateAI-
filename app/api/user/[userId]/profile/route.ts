@@ -10,8 +10,8 @@ export async function GET(
   try {
     const { userId } = await params;
 
-    if (!userId) {
-      return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+    if (!userId || typeof userId !== 'string') {
+      return NextResponse.json({ error: 'User ID must be a string' }, { status: 400 });
     }
 
     let sessions: SessionLog[] = [];

@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 import { UserProfile, SessionLog } from '@/lib/types/sessionLog';
 import { analyzeUserBehavior } from './behaviorAnalyzer';
 
@@ -23,6 +23,33 @@ export interface AdaptiveSessionPlan {
 }
 
 /**
+ * Helper to sanitize user goals against prompt injection
+ */
+function sanitizeGoalInput(input: string): string {
+  if (typeof input !== 'string') return '';
+  // 1. Truncate to maximum 100 characters to prevent massive payload injection
+  let sanitized = input.slice(0, 100);
+
+  // 2. Remove common adversarial phrases used in prompt injection attacks
+  const injectionPatterns = [
+    /ignore\s+(all\s+)?(previous\s+)?instructions/gi,
+    /system\s+prompt/gi,
+    /forget\s+(everything|all)/gi,
+    /you\s+must\s+now/gi,
+    /developer\s+mode/gi,
+    /act\s+as\s+a/gi,
+    /jailbreak/gi,
+    /bypass\s+rules/gi
+  ];
+
+  for (const pattern of injectionPatterns) {
+    sanitized = sanitized.replace(pattern, '');
+  }
+
+  return sanitized.trim();
+}
+
+/**
  * Generate an adaptive session plan based on user behavior
  */
 export async function generateAdaptiveSession(
@@ -31,6 +58,9 @@ export async function generateAdaptiveSession(
   userSessions: SessionLog[],
   userPreferences?: any
 ): Promise<AdaptiveSessionPlan> {
+  // Sanitize the goal input
+  const sanitizedGoal = sanitizeGoalInput(goal);
+
   // Step 1: Analyze user behavior
   const userProfile = analyzeUserBehavior(userSessions);
 
@@ -46,64 +76,67 @@ export async function generateAdaptiveSession(
   const oneDayAgo = new Date();
   oneDayAgo.setDate(oneDayAgo.getDate() - 1);
   const recentDuplicate = userSessions.find(
-    (s) => s.goal?.toLowerCase() === goal.toLowerCase() && new Date(s.createdAt) > oneDayAgo
+    (s) => s.goal?.toLowerCase() === sanitizedGoal.toLowerCase() && new Date(s.createdAt) > oneDayAgo
   );
 
   const duplicateContext = recentDuplicate 
     ? "\nCRITICAL: The user has already studied this topic recently. DO NOT include any 'Introduction', 'Setup', or 'Overview' tasks. Jump immediately into intermediate practice, advanced concepts, or building a project."
     : "";
   
-  const fullPrompt = `${adaptationPrompt}
+  const systemPrompt = `You are an adaptive learning coach that personalizes task breakdowns based on user behavior.
 
-User's goal: "${goal}"${duplicateContext}
+${adaptationPrompt}
+
+You must return a personalized, structured learning session based on the user's goal. You MUST adhere exactly to the JSON response schema.`;
+
+  const userPrompt = `User's goal: "${sanitizedGoal}"${duplicateContext}
 
 Please create a personalized ${targetDuration}-minute learning session that breaks down this goal into micro-tasks. The user's preferred difficulty level is ${targetDifficulty}.
 
 IMPORTANT RULES:
-1. Return ONLY valid JSON, no markdown, no extra text
-2. The sum of all task durations PLUS the breaks between them must NOT exceed the target session duration of ${targetDuration} minutes. Every break MUST be at least ${minBreak} minutes long.
-3. Include a "resources" field with the key topic to search for on YouTube
-4. Consider the user's preferences in task duration and difficulty
-5. Prioritize completion likelihood over perfectionism
-
-Return this exact JSON structure (and ONLY this):
-{
-  "goal": "...",
-  "estimatedTotalTime": number,
-  "suggestedBreakTiming": number,
-  "personalizationNotes": "...",
-  "tasks": [
-    {
-      "id": "task_1",
-      "name": "Task name",
-      "description": "Brief description of what to do",
-      "durationMinutes": number,
-      "difficulty": "beginner|intermediate|advanced",
-      "resources": "Topic to search for on YouTube"
-    }
-  ]
-}`;
+1. The sum of all task durations PLUS the breaks between them must NOT exceed the target session duration of ${targetDuration} minutes. Every break MUST be at least ${minBreak} minutes long.
+2. Include a "resources" field with the key topic to search for on YouTube.
+3. Consider the user's preferences in task duration and difficulty.
+4. Prioritize completion likelihood over perfectionism.`;
 
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-2.0-flash',
+      systemInstruction: systemPrompt,
+      generationConfig: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: SchemaType.OBJECT,
+          properties: {
+            goal: { type: SchemaType.STRING },
+            estimatedTotalTime: { type: SchemaType.NUMBER },
+            suggestedBreakTiming: { type: SchemaType.NUMBER },
+            personalizationNotes: { type: SchemaType.STRING },
+            tasks: {
+              type: SchemaType.ARRAY,
+              items: {
+                type: SchemaType.OBJECT,
+                properties: {
+                  id: { type: SchemaType.STRING },
+                  name: { type: SchemaType.STRING },
+                  description: { type: SchemaType.STRING },
+                  durationMinutes: { type: SchemaType.NUMBER },
+                  difficulty: { type: SchemaType.STRING, enum: ['beginner', 'intermediate', 'advanced'] } as any,
+                  resources: { type: SchemaType.STRING }
+                },
+                required: ['id', 'name', 'description', 'durationMinutes', 'difficulty', 'resources']
+              }
+            }
+          },
+          required: ['goal', 'estimatedTotalTime', 'suggestedBreakTiming', 'personalizationNotes', 'tasks']
+        }
+      }
+    });
 
-    const result = await model.generateContent(fullPrompt);
-    const responseText =
-      result.response.candidates?.[0]?.content.parts[0]?.text || '';
+    const result = await model.generateContent(userPrompt);
+    const responseText = result.response.text() || '';
 
-    // Parse JSON with robust error handling
-    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-    let cleanedResponse = responseText;
-    if (jsonMatch) {
-      cleanedResponse = jsonMatch[0];
-    } else {
-      cleanedResponse = responseText
-        .replace(/```json\n?/g, '')
-        .replace(/```\n?/g, '')
-        .trim();
-    }
-
-    const parsedPlan = JSON.parse(cleanedResponse) as AdaptiveSessionPlan;
+    const parsedPlan = JSON.parse(responseText.trim()) as AdaptiveSessionPlan;
 
     // Validate structure
     if (
@@ -118,7 +151,7 @@ Return this exact JSON structure (and ONLY this):
   } catch (error) {
     console.error('Gemini adaptation error:', error);
     // Fall back to generic session
-    return generateFallbackSession(goal);
+    return generateFallbackSession(sanitizedGoal || goal);
   }
 }
 
