@@ -10,762 +10,117 @@
 
 ---
 
-## 🚨 Honest Dev Note (Read This First)
+## 💡 The Problem
+Self-directed online learning is fundamentally broken. Over **95% of self-learners drop out** of online courses. 
+* **Content platforms**  provide great videos but offer *zero accountability*. Once momentum drops, the user disappears.
+* **Habit trackers** (Streaks, Habitica) gamify completion but lack *cognitive depth*. They track that you did "something" but don't adapt to how you actually learn or struggle.
+* **Human tutors** provide excellent coaching but are *expensive, unavailable 24/7, and hard to scale*.
 
-Most of the data you see in the UI right now is **dummy/hardcoded**. This README is your guide to replacing every fake number with real, dynamic, Gemini-powered data.
-
-The bones are solid. The AI logic is partially real. But the Profile page analytics, the "How We've Optimized for You" cards, the consistency trend chart — those are currently seeded with static values.
-
-**This README tells you exactly what's fake, where it lives, and how to make it real.**
-
----
-
-## 📸 What's Currently Built
-
-| Page | Status | Notes |
-|------|--------|-------|
-| Dashboard (streak, weekly activity) | ✅ Partial | Streak is real, activity dots are hardcoded |
-| AI Coach Check-in banner | ✅ Real | Gemini generates this message |
-| "What do you want to accomplish?" | ✅ Real | User input → Gemini → session plan |
-| Session flow (timer, tasks, video) | ✅ Real | YouTube search is live, timer is real |
-| Profile → Learning stats (90% completion, HIGH engagement) | ❌ Fake | Hardcoded in component |
-| Profile → Consistency Trend chart | ❌ Fake | Static data array |
-| Profile → Peak Performance Times chart | ❌ Fake | Hardcoded hours |
-| Profile → "How We've Optimized for You" cards | ❌ Fake | Seeded optimization history |
-| Profile → Weekly Stats (12 sessions, 18.5h) | ❌ Fake | Hardcoded numbers |
-| Settings → Save preferences | ✅ Real | Saves to Firestore/localStorage |
+Traditional learning is one-size-fits-all. It doesn't care if you're flying through concepts in 2 minutes and getting bored, or struggling on a coding bug for hours and getting frustrated.
 
 ---
 
-## 🏗️ Project Structure
+## 🧠 The Solution: MotivateAI
+MotivateAI acts as your **always-on cognitive learning companion**. Using **Google Gemini 2.0**, it analyzes your real-time learning signals—such as historical task completion rates, average focus durations, optimal break intervals, and focus drop-off thresholds—to dynamically customize and schedule every micro-session specifically to your focus habits.
 
-```
-MotivateAI/
-├── app/
-│   ├── page.tsx                    # Dashboard (main entry)
-│   ├── profile/
-│   │   └── page.tsx                # Learning profile + analytics
-│   ├── settings/
-│   │   └── page.tsx                # User preferences
-│   └── api/
-│       ├── generate-session/
-│       │   └── route.ts            # Gemini: generates session plan from user goal
-│       ├── coach-checkin/
-│       │   └── route.ts            # Gemini: daily check-in message
-│       ├── youtube-search/
-│       │   └── route.ts            # YouTube Data API: finds learning resource
-│       └── optimize-profile/
-│           └── route.ts            # Gemini: analyzes sessions → optimization cards
-│
-├── components/
-│   ├── Dashboard/
-│   │   ├── StreakCard.tsx           # 🔥 streak display
-│   │   ├── WeeklyActivity.tsx       # 7-day activity dots
-│   │   ├── CoachCheckin.tsx         # AI coach banner
-│   │   ├── GoalInput.tsx            # "What do you want to accomplish?"
-│   │   └── SessionView.tsx          # Timer + task list + YouTube embed
-│   │
-│   └── Profile/
-│       ├── LearningStats.tsx        # ❌ FAKE — completion rate, engagement etc
-│       ├── ConsistencyChart.tsx     # ❌ FAKE — recharts line graph
-│       ├── PeakPerformance.tsx      # ❌ FAKE — bar chart by time of day
-│       ├── OptimizationHistory.tsx  # ❌ FAKE — before/after cards
-│       ├── TaskDifficulty.tsx       # ❌ FAKE — donut chart
-│       └── WeeklyStats.tsx          # ❌ FAKE — sessions/hours/avg
-│
-├── lib/
-│   ├── gemini.ts                   # Gemini API client + prompt functions
-│   ├── session-store.ts            # ❌ NEEDS WORK — session persistence
-│   └── user-store.ts               # ❌ NEEDS WORK — user data persistence
-│
-└── public/
-    └── ...
+```mermaid
+graph TD
+    User([User Goal]) -->|1. Submit Goal| Input[Adaptive Goal Input]
+    Input -->|2. Get Behavioral Profile| DB[(MongoDB / LocalStorage)]
+    DB -->|3. Past Sessions & Prefs| Engine[Gemini 2.0 Session Planner]
+    Engine -->|4. Generate JSON Session Plan| Sourcing[YouTube Search Sourcing]
+    Sourcing -->|5. Sourced Tutorial & Coach Notes| Runner[Active Session Runner]
+    Runner -->|6. Real-time Timers & Signal Logging| Analyzer[Behavioral Signal Analyzer]
+    Analyzer -->|7. Compute Habits & Optimization Cards| DB
 ```
 
 ---
 
-## ⚡ Quick Start
+## ✨ Core Features
 
+### 1. Autonomous Session Generation
+Submit any learning goal (e.g., *"Learn Python encapsulation"*). Gemini 2.0 reviews your profile history, calculates your momentum, and generates an optimized curriculum split into bite-sized tasks. It automatically fetches a relevant YouTube tutorial and places a **personalized Coach Note** below the video, guiding you to the most relevant timestamp so you never waste time.
+
+### 2. Empathic AI Coach Check-in
+Every time you load the dashboard, an autonomous AI coach greets you with a highly personalized message generated by Gemini. It references your actual history—streak status, the last concept you successfully completed, or a gentle, non-guilt-tripping nudge if you've been away for a couple of days.
+
+### 3. Active Session Runner & Break Manager
+Each task features a dedicated circular SVG countdown timer. Between sessions, a break timer triggers with a motivational quote and customized break activities (hydration, deep breathing, quick stretches) based on your fatigue patterns. 
+
+### 4. Interactive Behavioral Analytics
+Your Profile page features full-scale visual reporting powered by **Recharts**:
+* **Consistency Trend:** A 7-day line chart illustrating task completion rates aligned with a weighted engagement score.
+* **Peak Performance Times:** A bar chart grouping your highest performance scores by time of day, allowing you to schedule difficult tasks at your optimal productivity window.
+* **Task Difficulty Breakdown:** A donut chart showing your comfort levels with Easy, Medium, and Hard tasks.
+* **Weekly Aggregations:** Total study hours, active sessions, and active day streaks.
+
+### 5. "How We've Optimized for You" Engine ⭐
+The crowning feature: Click the **Run Optimization Engine** to trigger a Gemini analysis over your last 30 sessions. The model reviews your average break skip rates and performance drop-offs, generates concrete before/after comparisons, writes a detailed clinical reasoning, and **automatically applies the new settings** directly into your user preferences profile.
+
+---
+
+## 🛠️ Technology Stack
+
+* **Frontend:** Next.js 16 (App Router), React 19, TypeScript
+* **Styling:** Tailwind CSS with a gorgeous **Dark Glassmorphism UI** featuring sleek neon purple glows, translucent panels, and micro-interactions.
+* **Database:** MongoDB for robust, scalable session logs, user preferences, and optimization logs.
+* **AI Model:** Google Gemini 2.0 Flash (via `@google/generative-ai` SDK) utilizing strict JSON schema enforcement (`responseSchema`) and system instruction partitioning.
+* **Integrations:** YouTube Data API v3 for targeted video sourcing.
+
+---
+
+## 🔒 Security & Validation
+
+* **Prompt Sanitization:** All user goals are truncated to 100 characters and sanitized against prompt-injection patterns (e.g., *"ignore previous instructions"*).
+* **System Isolation:** System-level instructions are partitioned completely inside Gemini's official `systemInstruction` parameters, blocking user-input override attacks.
+* **JSON Schema Enforcement:** Every Gemini API call strictly enforces a structured `responseSchema` to guarantee programmatic Type Safety on the client side.
+
+---
+
+## 🚀 Quick Start & Installation
+
+Because MotivateAI is configured to deploy directly in the cloud, you can run it without local environment worries!
+
+### 1. Clone the repository
 ```bash
-# 1. Clone
 git clone https://github.com/aaminashihab/MotivateAI.git
 cd MotivateAI
-
-# 2. Install
-npm install
-
-# 3. Set up environment variables
-cp .env.example .env.local
-# Fill in your keys (see Environment Variables section below)
-
-# 4. Run locally
-npm run dev
-
-# App runs at http://localhost:3000
 ```
 
----
+### 2. Install dependencies
+```bash
+npm install
+```
 
-## 🔑 Environment Variables
-
-Create a `.env.local` file:
-
+### 3. Configure Environment Variables
+Create a `.env.local` file in your root directory:
 ```env
-# Gemini API (Required — everything AI runs on this)
+# Gemini API Key (aistudio.google.com)
 GEMINI_API_KEY=your_gemini_api_key_here
 
-# YouTube Data API v3 (Required — learning resource search)
+# YouTube Data API v3 (console.cloud.google.com)
 YOUTUBE_API_KEY=your_youtube_api_key_here
 
-# MongoDB (Required for session persistence and tracking)
+# MongoDB Connection String (mongodb.com)
 MONGODB_URI=your_mongodb_connection_string_here
-
-# Optional: If you add auth later
-NEXTAUTH_SECRET=
-NEXTAUTH_URL=http://localhost:3000
 ```
 
-**Where to get keys:**
-- Gemini API → [aistudio.google.com](https://aistudio.google.com/app/apikey)
-- YouTube Data API → [console.cloud.google.com](https://console.cloud.google.com) → APIs & Services → YouTube Data API v3
-- MongoDB → [mongodb.com](https://www.mongodb.com)
-
----
-
-## 🧠 How the Real AI Works (What's Actually Gemini)
-
-### 1. Session Generation (`/api/generate-session`)
-
-When the user types their goal (e.g., "oop concept") and hits Start, this fires:
-
-```typescript
-// lib/gemini.ts
-export async function generateSessionPlan(
-  goal: string,
-  userPreferences: UserPreferences,
-  sessionHistory: Session[]
-) {
-  const prompt = `
-    You are an AI learning coach. Generate a focused study session plan.
-    
-    User's goal: "${goal}"
-    Learning style: ${userPreferences.learningStyle}
-    Preferred session length: ${userPreferences.maxSession} minutes
-    Difficulty level: ${userPreferences.difficultyLevel}
-    
-    Recent session history (last 5):
-    ${sessionHistory.slice(-5).map(s => 
-      `- ${s.topic}: ${s.completionRate}% completion, ${s.duration}min`
-    ).join('\n')}
-    
-    Generate a session plan with 4 tasks. Return JSON:
-    {
-      "tasks": [
-        {
-          "id": 1,
-          "title": "Introduction & Setup",
-          "duration": 15,
-          "description": "What to focus on in this task"
-        }
-      ],
-      "searchQuery": "best youtube video for learning [topic] beginners",
-      "estimatedDifficulty": "beginner|intermediate|expert"
-    }
-    
-    Return ONLY valid JSON, no markdown.
-  `
-  
-  const result = await model.generateContent(prompt)
-  return JSON.parse(result.response.text())
-}
-```
-
-**This is already working.** The tasks you see (Introduction & Setup, Core Concepts, etc.) are real Gemini output.
-
-### 2. Daily Coach Check-in (`/api/coach-checkin`)
-
-Runs on dashboard load. Gemini writes a personalized message based on streak + last session:
-
-```typescript
-export async function generateCoachCheckin(
-  streak: number,
-  lastSessionTopic: string,
-  lastSessionCompletion: number,
-  daysSinceLastSession: number
-) {
-  const prompt = `
-    You are a supportive AI learning coach. Write ONE short check-in message (max 15 words).
-    
-    User stats:
-    - Current streak: ${streak} days
-    - Last studied: ${lastSessionTopic}
-    - Last completion rate: ${lastSessionCompletion}%
-    - Days since last session: ${daysSinceLastSession}
-    
-    Rules:
-    - If daysSinceLastSession > 2: gently acknowledge the gap, invite them back
-    - If completion < 60%: encourage without guilt
-    - If streak > 7: celebrate
-    - Always end with a question or action
-    - Sound human, not robotic
-    
-    Return ONLY the message text, no quotes.
-  `
-  
-  const result = await model.generateContent(prompt)
-  return result.response.text().trim()
-}
-```
-
-**This is real.** "Keep up the great work! Ready for another session today?" — that's Gemini.
-
----
-
-## ❌ What's Fake + How to Fix It
-
-### Fix 1: Learning Stats (Completion Rate, Engagement, etc.)
-
-**Currently:** Hardcoded `90%`, `HIGH`, `15 min`, `0% skip rate`
-
-**File:** `components/Profile/LearningStats.tsx`
-
-```typescript
-// ❌ CURRENT (fake)
-const stats = {
-  completionRate: 90,
-  avgTaskDuration: 15,
-  engagementLevel: "HIGH",
-  breakSkipRate: 0
-}
-
-// ✅ REPLACE WITH: Calculate from real session history
-export async function calculateLearningStats(userId: string) {
-  const sessions = await getSessionHistory(userId, 30) // last 30 sessions
-  
-  const completionRate = Math.round(
-    sessions.reduce((sum, s) => sum + s.completionRate, 0) / sessions.length
-  )
-  
-  const avgTaskDuration = Math.round(
-    sessions.reduce((sum, s) => sum + s.avgTaskDuration, 0) / sessions.length
-  )
-  
-  const breakSkipRate = Math.round(
-    (sessions.filter(s => s.skippedBreak).length / sessions.length) * 100
-  )
-  
-  const engagementLevel = completionRate >= 80 ? "HIGH" 
-    : completionRate >= 60 ? "MEDIUM" 
-    : "LOW"
-  
-  return { completionRate, avgTaskDuration, engagementLevel, breakSkipRate }
-}
-```
-
-**Session schema you need to store:**
-```typescript
-interface Session {
-  id: string
-  userId: string
-  topic: string
-  goal: string
-  startedAt: Date
-  completedAt: Date | null
-  tasks: Task[]
-  completionRate: number      // 0-100: % of tasks marked done
-  avgTaskDuration: number     // minutes per task
-  skippedBreak: boolean
-  difficultyRating: number    // 1-5 (ask user at end)
-  timeOfDay: string           // "6-8 AM", "8-10 AM", etc.
-}
-```
-
----
-
-### Fix 2: Consistency Trend Chart
-
-**Currently:** Static array `[{day: 'Mon', completion: 60, engagement: 47}, ...]`
-
-**File:** `components/Profile/ConsistencyChart.tsx`
-
-```typescript
-// ❌ CURRENT (fake)
-const data = [
-  { day: 'Mon', completion: 60, engagement: 47 },
-  { day: 'Tue', completion: 65, engagement: 50 },
-  // ... hardcoded
-]
-
-// ✅ REPLACE WITH: Real 7-day aggregation
-export async function getWeeklyTrend(userId: string) {
-  const last7Days = getLast7Days() // ['Mon', 'Tue', ..., 'Sun']
-  
-  return Promise.all(last7Days.map(async (day) => {
-    const sessions = await getSessionsForDay(userId, day.date)
-    
-    if (sessions.length === 0) {
-      return { day: day.label, completion: 0, engagement: 0 }
-    }
-    
-    const avgCompletion = Math.round(
-      sessions.reduce((sum, s) => sum + s.completionRate, 0) / sessions.length
-    )
-    
-    // Engagement score: weighted combo of completion + time spent + no skips
-    const avgEngagement = Math.round(
-      sessions.reduce((sum, s) => {
-        const timeScore = Math.min((s.duration / s.expectedDuration) * 100, 100)
-        const skipPenalty = s.skippedBreak ? 15 : 0
-        return sum + ((s.completionRate * 0.6) + (timeScore * 0.4) - skipPenalty)
-      }, 0) / sessions.length
-    )
-    
-    return { day: day.label, completion: avgCompletion, engagement: avgEngagement }
-  }))
-}
-```
-
----
-
-### Fix 3: Peak Performance Times
-
-**Currently:** Hardcoded bar chart showing 6-8AM and 8-10AM as "best"
-
-**File:** `components/Profile/PeakPerformance.tsx`
-
-```typescript
-// ❌ CURRENT (fake)
-const timeSlots = [
-  { slot: '6-8 AM', performance: 95, color: 'green' },
-  { slot: '8-10 AM', performance: 93, color: 'green' },
-  // ...hardcoded
-]
-
-// ✅ REPLACE WITH: Group sessions by time of day
-export async function getPeakPerformanceTimes(userId: string) {
-  const sessions = await getSessionHistory(userId, 30)
-  
-  const timeSlots = {
-    '6-8 AM':   { total: 0, count: 0 },
-    '8-10 AM':  { total: 0, count: 0 },
-    '10-12 PM': { total: 0, count: 0 },
-    '2-4 PM':   { total: 0, count: 0 },
-    '6-8 PM':   { total: 0, count: 0 },
-  }
-  
-  sessions.forEach(session => {
-    const hour = new Date(session.startedAt).getHours()
-    const slot = getTimeSlot(hour) // maps hour → slot string
-    
-    if (slot && timeSlots[slot]) {
-      timeSlots[slot].total += session.completionRate
-      timeSlots[slot].count++
-    }
-  })
-  
-  return Object.entries(timeSlots).map(([slot, data]) => ({
-    slot,
-    performance: data.count > 0 ? Math.round(data.total / data.count) : 0,
-    sessionCount: data.count
-  }))
-}
-
-function getTimeSlot(hour: number): string {
-  if (hour >= 6 && hour < 8)   return '6-8 AM'
-  if (hour >= 8 && hour < 10)  return '8-10 AM'
-  if (hour >= 10 && hour < 12) return '10-12 PM'
-  if (hour >= 14 && hour < 16) return '2-4 PM'
-  if (hour >= 18 && hour < 20) return '6-8 PM'
-  return 'Other'
-}
-```
-
----
-
-### Fix 4: "How We've Optimized for You" Cards ⭐ (Most Important)
-
-This is the most impressive feature in the product. Currently **completely fake**. Here's how to make it real with Gemini:
-
-**File:** `components/Profile/OptimizationHistory.tsx`
-
-```typescript
-// ❌ CURRENT (fake)
-const optimizations = [
-  {
-    title: "Break Length Optimized",
-    date: "5/20/2026",
-    improvement: "+23% better",
-    before: "2 min breaks",
-    after: "5 min breaks",
-    reasoning: "Analysis shows your engagement drops 40% after 30 minutes..."
-  }
-  // ... all fake
-]
-
-// ✅ REPLACE WITH: Gemini analyzes real session data
-// Run this in /api/optimize-profile/route.ts (weekly cron or on-demand)
-
-export async function generateOptimizations(
-  userId: string,
-  currentPreferences: UserPreferences,
-  sessionHistory: Session[]
-) {
-  // Prepare analytics summary for Gemini
-  const analytics = {
-    avgCompletionByBreakLength: groupBy(sessionHistory, 'breakLength')
-      .map(g => ({ breakLength: g.key, avgCompletion: average(g.sessions, 'completionRate') })),
-    
-    avgCompletionByTimeOfDay: groupBy(sessionHistory, 'timeOfDay')
-      .map(g => ({ time: g.key, avgCompletion: average(g.sessions, 'completionRate') })),
-    
-    avgCompletionByTaskDuration: groupBy(sessionHistory, 'avgTaskDuration')
-      .map(g => ({ duration: g.key, avgCompletion: average(g.sessions, 'completionRate') })),
-    
-    skipRateByDifficulty: groupBy(sessionHistory, 'difficulty')
-      .map(g => ({ difficulty: g.key, skipRate: skipRate(g.sessions) })),
-  }
-  
-  const prompt = `
-    You are an AI learning coach analyzing a user's learning patterns.
-    
-    Current preferences:
-    - Break length: ${currentPreferences.breakLength} minutes
-    - Session time: ${currentPreferences.preferredSessionTime}
-    - Task duration: ${currentPreferences.maxSession} minutes
-    - Difficulty: ${currentPreferences.difficultyLevel}
-    
-    Analytics from last 30 sessions:
-    ${JSON.stringify(analytics, null, 2)}
-    
-    Identify 2-3 specific optimizations that would improve performance.
-    For each, provide a BEFORE/AFTER comparison with a percentage improvement estimate.
-    
-    Return JSON array:
-    [
-      {
-        "title": "Break Length Optimized",
-        "category": "break|time|duration|difficulty|focus",
-        "before": "2 min breaks",
-        "after": "5 min breaks",
-        "improvementPercent": 23,
-        "reasoning": "Your engagement drops measurably after 30 min of continuous work. Longer breaks maintain peak focus.",
-        "dataPoint": "You were skipping breaks, causing focus drops after 30 min",
-        "newPreferences": { "breakLength": 5 }
-      }
-    ]
-    
-    Return ONLY valid JSON array.
-  `
-  
-  const result = await model.generateContent(prompt)
-  const optimizations = JSON.parse(result.response.text())
-  
-  // Apply the new preferences automatically
-  for (const opt of optimizations) {
-    if (opt.newPreferences) {
-      await updateUserPreferences(userId, opt.newPreferences)
-    }
-    
-    // Store in DB so the UI can show history
-    await saveOptimization(userId, {
-      ...opt,
-      date: new Date(),
-      applied: true
-    })
-  }
-  
-  return optimizations
-}
-```
-
-**Trigger this function:**
-```typescript
-// Option A: Run weekly via cron
-// vercel.json
-{
-  "crons": [
-    {
-      "path": "/api/optimize-profile",
-      "schedule": "0 9 * * 1"  // Every Monday at 9 AM
-    }
-  ]
-}
-
-// Option B: Run after every 5th session
-// In your session completion handler:
-const sessionCount = await getSessionCount(userId)
-if (sessionCount % 5 === 0) {
-  await generateOptimizations(userId, prefs, history)
-}
-```
-
----
-
-### Fix 5: Weekly Stats
-
-**Currently:** `12 sessions, 18.5h, 1h 32m avg, 7 streak`
-
-**File:** `components/Profile/WeeklyStats.tsx`
-
-```typescript
-// ❌ CURRENT (fake)
-const stats = {
-  totalSessions: 12,
-  totalHours: 18.5,
-  avgPerSession: "1h 32m",
-  streakDays: 7
-}
-
-// ✅ REPLACE WITH:
-export async function getWeeklyStats(userId: string) {
-  const sessions = await getSessionsThisWeek(userId)
-  const streak = await getCurrentStreak(userId)
-  
-  const totalMinutes = sessions.reduce((sum, s) => sum + s.duration, 0)
-  const avgMinutes = sessions.length > 0 
-    ? Math.round(totalMinutes / sessions.length) 
-    : 0
-  
-  return {
-    totalSessions: sessions.length,
-    totalHours: parseFloat((totalMinutes / 60).toFixed(1)),
-    avgPerSession: formatDuration(avgMinutes), // "1h 32m"
-    streakDays: streak
-  }
-}
-```
-
----
-
-## 💾 Data Layer: What You Need to Store
-
-Right now the app has almost no persistence. To make everything real, you need to store sessions. Here's the minimum schema:
-
-### Database Architecture (MongoDB)
-
-```typescript
-// lib/types/sessionLog.ts
-
-// Collection: sessions
-interface StoredSession {
-  id: string
-  topic: string
-  goal: string
-  startedAt: Timestamp
-  completedAt: Timestamp | null
-  durationMinutes: number
-  tasks: {
-    id: number
-    title: string
-    durationMin: number
-    completedAt: Timestamp | null
-    skipped: boolean
-  }[]
-  completionRate: number        // 0-100
-  breaksTaken: number
-  breaksSkipped: number
-  timeOfDay: string             // '8-10 AM'
-  difficultyLevel: string       // 'beginner' | 'intermediate' | 'expert'
-  youtubeVideoId: string | null
-  userRating: number | null     // 1-5 stars (ask at end of session)
-}
-
-// Collection: users/{userId}
-interface UserProfile {
-  createdAt: Timestamp
-  streak: number
-  lastSessionDate: string       // 'YYYY-MM-DD'
-  totalSessions: number
-  preferences: UserPreferences
-  optimizations: Optimization[] // history of AI-applied changes
-}
-
-// How to save a session:
-export async function saveSession(userId: string, session: StoredSession) {
-  const db = getFirestore()
-  
-  // Save session
-  await addDoc(collection(db, 'users', userId, 'sessions'), session)
-  
-  // Update user profile
-  const userRef = doc(db, 'users', userId)
-  await updateDoc(userRef, {
-    totalSessions: increment(1),
-    lastSessionDate: format(new Date(), 'yyyy-MM-dd'),
-    streak: await calculateStreak(userId)
-  })
-}
-```
-
-### Option B: localStorage (For hackathon demo, no backend needed)
-
-```typescript
-// lib/session-store.ts
-const SESSIONS_KEY = 'motivateai_sessions'
-const USER_KEY = 'motivateai_user'
-
-export function saveSession(session: StoredSession) {
-  const sessions = getSessions()
-  sessions.push(session)
-  localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions))
-}
-
-export function getSessions(): StoredSession[] {
-  try {
-    return JSON.parse(localStorage.getItem(SESSIONS_KEY) || '[]')
-  } catch {
-    return []
-  }
-}
-
-export function getSessionsLast30Days(): StoredSession[] {
-  const cutoff = subDays(new Date(), 30)
-  return getSessions().filter(s => 
-    new Date(s.startedAt) > cutoff
-  )
-}
-```
-
----
-
-## 🎯 Session Completion Flow (Critical Missing Piece)
-
-Right now when a user finishes a session, nothing is saved. Add this:
-
-```typescript
-// components/Dashboard/SessionView.tsx
-
-async function handleSessionComplete() {
-  const endTime = new Date()
-  const completedTaskCount = tasks.filter(t => t.completed).length
-  
-  const sessionData: StoredSession = {
-    id: crypto.randomUUID(),
-    topic: currentGoal,
-    goal: currentGoal,
-    startedAt: sessionStartTime,
-    completedAt: endTime,
-    durationMinutes: Math.round((endTime - sessionStartTime) / 60000),
-    tasks: tasks.map(t => ({
-      id: t.id,
-      title: t.title,
-      durationMin: t.duration,
-      completedAt: t.completedAt || null,
-      skipped: t.skipped || false
-    })),
-    completionRate: Math.round((completedTaskCount / tasks.length) * 100),
-    breaksTaken: breaksTaken,
-    breaksSkipped: breaksSkipped,
-    timeOfDay: getTimeSlot(new Date(sessionStartTime).getHours()),
-    difficultyLevel: userPreferences.difficultyLevel,
-    youtubeVideoId: currentVideoId,
-    userRating: null // prompt user to rate
-  }
-  
-  // Save it
-  await saveSession(userId, sessionData)
-  
-  // Update streak
-  await updateStreak(userId)
-  
-  // Show completion screen
-  setSessionComplete(true)
-  
-  // Ask for rating (optional but valuable)
-  setShowRatingPrompt(true)
-}
-```
-
----
-
-## 🤖 Gemini Prompts Cheat Sheet
-
-All the prompts that power the app, ready to copy-paste:
-
-```typescript
-// lib/gemini.ts
-
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
-
-// 1. Generate session plan
-export const SESSION_PROMPT = (goal, prefs, history) => `...` // see above
-
-// 2. Daily coach check-in  
-export const CHECKIN_PROMPT = (streak, lastTopic, daysSince) => `
-  Write a 1-sentence check-in for a user studying ${lastTopic}.
-  Streak: ${streak} days. Days since last session: ${daysSince}.
-  ${daysSince > 2 ? 'They missed some days - be understanding, not guilt-trippy.' : ''}
-  ${streak > 7 ? 'Celebrate their streak!' : ''}
-  Max 15 words. End with a question.
-`
-
-// 3. Generate optimizations (weekly)
-export const OPTIMIZE_PROMPT = (prefs, analytics) => `...` // see above
-
-// 4. Post-session reflection (new feature idea)
-export const REFLECTION_PROMPT = (session) => `
-  The user just completed a session on "${session.topic}".
-  Completion rate: ${session.completionRate}%.
-  Duration: ${session.durationMinutes} minutes.
-  
-  Write 2-3 bullet points:
-  1. What they likely learned
-  2. A specific follow-up question to test their understanding
-  3. What to tackle next session
-  
-  Keep it encouraging and specific.
-`
-
-// 5. Smart resource search query
-export const YOUTUBE_QUERY_PROMPT = (goal, level) => `
-  Generate the best YouTube search query to find a tutorial for: "${goal}"
-  User level: ${level}
-  
-  Return ONLY the search query string, no explanation.
-  Example output: "python list comprehensions tutorial for beginners freeCodeCamp"
-`
-```
-
----
-
-## 🚀 Deployment (Google Cloud Run)
-
-The app deploys via Cloud Build trigger on push to `main`.
-
-```yaml
-# cloudbuild.yaml
-steps:
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '--no-cache', '-t', 'europe-west1-docker.pkg.dev/$PROJECT_ID/motivateai/motivateai:latest', '.']
-  
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'europe-west1-docker.pkg.dev/$PROJECT_ID/motivateai/motivateai:latest']
-  
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: gcloud
-    args:
-      - 'run'
-      - 'services'
-      - 'update'
-      - 'motivateai'
-      - '--image=europe-west1-docker.pkg.dev/$PROJECT_ID/motivateai/motivateai:latest'
-      - '--region=europe-west1'
-```
-
-**Set env vars in Cloud Run:**
+### 4. Run the development server
 ```bash
-gcloud run services update motivateai \
-  --set-env-vars GEMINI_API_KEY=xxx,YOUTUBE_API_KEY=xxx \
-  --region europe-west1
+npm run dev
+# Open http://localhost:3000 in your browser
 ```
-
-
-
-## 📄 License
-
-MIT — do whatever you want with it.
 
 ---
 
-*Built with Next.js, Tailwind, Gemini API, YouTube Data API, and a lot of caffeine.*  
-*Deployed on Google Cloud Run.*
+## ☁️ Production Deployment (Google Cloud Run)
+
+The application includes a optimized multi-stage `Dockerfile` and a pipeline configured to continuously build and deploy on push via Cloud Build to Google Cloud Run.
+
+To manually trigger a deployment to Google Cloud Run:
+```bash
+# Set up variables in Cloud Run
+gcloud run services update motivateai \
+  --set-env-vars GEMINI_API_KEY=xxx,YOUTUBE_API_KEY=xxx,MONGODB_URI=xxx \
+  --region us-central1
+```
